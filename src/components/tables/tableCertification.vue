@@ -1,0 +1,110 @@
+<template>
+    <div class="q-pa-md">
+        <q-table :rows="rows" :columns="columns" flat bordered class="q-table-custom" :loading="loading">
+            <template v-slot:header="props">
+                <q-tr :props="props" class="custom-header-row">
+                    <q-th v-for="col in props.cols" :key="col.name" :props="props" class="custom-header-cell">
+                        {{ col.label }}
+                    </q-th>
+                </q-tr>
+            </template>
+
+            <template v-slot:body-cell-Num="props">
+                <q-td :props="props" class="q-pa-xs text-center">
+                    {{ props.pageIndex + 1 }}
+                </q-td>
+            </template>
+
+            <template v-slot:body-cell-status="props">
+                <q-td :props="props" class="q-pa-xs text-center">
+                    <q-btn @click="toggleActivate(props.row)" :color="props.row.status === 1 ? 'green' : 'grey'"
+                        :loading="loadingStates[props.row._id]">
+                        <q-spinner v-if="loadingStates[props.row._id]" color="white" size="20px" />
+                        {{ props.row.status === 1 ? 'Certificado' : 'Por Certificar' }}
+                    </q-btn>
+                </q-td>
+            </template>
+
+            <template v-slot:body-cell-documentCertification="props">
+                <q-td :props="props" class="q-pa-xs ">
+                    <q-btn @click="onClickDocumentCertification(props.row)" color="primary" icon="folder" round size="md" />
+                </q-td>
+            </template>
+            <template v-slot:body-cell-documentJugement="props">
+                <q-td :props="props" class="q-pa-xs ">
+                    <q-btn @click="onClickDocumentJugement(props.row)" color="primary" icon="folder" round size="md" />
+                </q-td>
+            </template>
+
+            <template v-slot:loading>
+                <q-inner-loading :showing="loading" color="primary" />
+            </template>
+
+        </q-table>
+    </div>
+</template>
+
+<script setup>
+import { ref } from "vue";
+let loadingStates = ref({});
+const props = defineProps({
+    rows: {
+        type: Array,
+        required: true,
+    },
+    columns: {
+        type: Array,
+        required: true,
+    },
+    onClickDocumentCertification:{
+        type:Function,
+        required: true
+    },
+    onClickDocumentJugement:{
+        type:Function,
+        required: true
+    },
+    loading: {
+        type: Boolean,
+        required: true,
+    }
+
+});
+
+const toggleActivate = async (row) => {
+    loadingStates.value[row._id] = true;
+    try {
+        await props.toggleActivate(row);
+    } finally {
+        loadingStates.value[row._id] = false;
+    }
+};
+</script>
+
+<style scoped>
+.q-table-custom {
+    border: 1px solid #000000;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.custom-header-row {
+    background-color: #4caf50;
+}
+
+.custom-header-cell {
+    color: white;
+    font-weight: bold;
+    text-align: center;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: 700;
+   
+}
+
+.optionsEditAdd-btn {
+    display: flex;
+    gap: 10px;
+}
+</style>
