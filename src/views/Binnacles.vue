@@ -11,7 +11,7 @@
       <div class="InputButtonsSearch">
         <inputSelect v-model="searchValue" label="Buscar" :options="filterOptionsSearch" optionLabel="label"
           optionValue="_id" :useInput="!Search" :filter="filterFunctionSearch" class="custom-select" />
-        <buttonSearch :onclickButton="bucar" />
+        <buttonSearch :onclickButton="searchButton" :loading="loadingSearch" />
       </div>
     </div>
   </div>
@@ -67,6 +67,7 @@ const id = ref('')
 
 // spiner
 let loading = ref(false);
+let loadingSearch = ref(false);
 const route = useRoute();
 
 
@@ -95,7 +96,7 @@ const columns = ref([
     sortable: true,
   },
   {
-    name: "user",
+    name: "nameInstructor",
     label: "NOMBRE INSTRUCTOR",
     align: "center",
     field: row => row.instructor ? row.instructor.name : 'No asignado',
@@ -110,6 +111,12 @@ const columns = ref([
   }, {
     name: "observation",
     label: "OBSERVACIONES",
+    align: "center",
+    field: "observation",
+    sortable: true,
+  },{
+    name: "detail",
+    label: "DETALLES",
     align: "center",
     field: "observation",
     sortable: true,
@@ -311,7 +318,8 @@ async function filterFunctionSearch(val, update) {
   });
 }
 
-async function bucar() {
+async function searchButton() {
+  loadingSearch.value = true;
   validationSearch()
   if(searchValue.value === ''){
     loadDataBinnacles()
@@ -323,6 +331,7 @@ async function bucar() {
     await searchApprentice()
   }
   clearSearch();
+  loadingSearch.value = false;
 }
 </script>
 

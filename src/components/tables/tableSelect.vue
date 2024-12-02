@@ -29,6 +29,11 @@
                     </div>
                 </q-td>
             </template>
+            <template v-slot:body-cell-detail="props">
+                <q-td :props="props" class="q-pa-xs text-center">
+                    <q-btn @click="onClickLinkDetail(props.row)" color="primary" icon="folder" round size="md" />
+                </q-td>
+            </template>
 
             <template v-slot:body-cell-Num="props">
                 <q-td :props="props" class="q-pa-xs text-center">
@@ -82,7 +87,11 @@ const props = defineProps({
     loading: {
     type: Boolean,
     required: true,
-  }
+  },
+    onClickLinkDetail: {
+        type: Function,
+        required: true,
+    },
 });
 
 </script>

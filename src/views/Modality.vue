@@ -3,11 +3,11 @@
   <div id="buttons-container">
     <modalDialog class="formModality" :title="modalTitle" v-model="isDialogVisibleModal" nameButton="Crear"
       labelClose="Cerrar" labelSend="Guardar" :onclickClose="handleClose" :onclickSend="handleSend"
-      :openModalButton="openButtonCreate">
+      :openModalButton="openButtonCreate" :loading="loadingSend">
 
       <q-select v-model="modality" :options="filterOptionsModality" label="Nombre de la modalidad" emit-value
-        map-options option-label="label" option-value="_id" :use-input="!modalitytp" @filter="filterFunctionModality" clearable
-        class="custom-select"  :rules="[
+        map-options option-label="label" option-value="_id" :use-input="!modalitytp" @filter="filterFunctionModality"
+        clearable class="custom-select" :rules="[
           (val) => !!val || 'La ficha Modalidad es obligatoria'
         ]" filled>
         <template v-slot:prepend class="custom-select">
@@ -39,7 +39,7 @@
     <div class="InputButtonsSearch">
       <inputSelect v-model="searchValue" label="Buscar" :options="filterOptionsSearch" optionLabel="label"
         optionValue="_id" :useInput="!Search" :filter="filterFunctionSearch" class="custom-select" />
-      <buttonSearch :onclickButton="searchModality" />
+      <buttonSearch :onclickButton="searchModality" :loading="loadingSearch" />
     </div>
   </div>
   <tableModalityEp :rows="rows" :columns="columns" :onclickEdit="openDialogEdit" :loading="loading" />
@@ -81,6 +81,8 @@ let searchValue = ref('')
 
 // spiners
 let loading = ref(false)
+let loadingSearch = ref(false)
+let loadingSend = ref(false)
 
 const rows = ref([
 ]);
@@ -184,17 +186,17 @@ function handleClose() {
 }
 
 async function handleSend() {
-
+  loadingSend.value = true
   try {
-    if(!validationsForm()){
-    return 
-  }
+    if (!validationsForm()) {
+      return
+    }
     const data = {
-    name: modality.value,
-    hourInstructorFollow: hourInstFollowup.value,
-    hourInstructorTechnical: hourInstTechnical.value,
-    hourInstructorProject: hourInstProyect.value
-  }
+      name: modality.value,
+      hourInstructorFollow: hourInstFollowup.value,
+      hourInstructorTechnical: hourInstTechnical.value,
+      hourInstructorProject: hourInstProyect.value
+    }
     let response;
     if (ismodalType.value) {
       response = await postData('/modality/addModality', data)
@@ -215,34 +217,33 @@ async function handleSend() {
         return
       }
     }
-    
     isDialogVisibleModal.value = false;
-    notifySuccessRequest('Datos enviados correctamente')    
+    notifySuccessRequest('Datos enviados correctamente')
     cleanForm()
     await loadDataModality()
   } catch (error) {
     let messageError;
     if (error.response && error.response.data && error.response.data.message) {
       messageError = error.response.data.message
-    }else if(error.response && error.response.data && error.response.data.error){
+    } else if (error.response && error.response.data && error.response.data.error) {
       messageError = error.response.data.error
-
     } else if (error.response && error.response.data && error.response.data.errors &&
       error.response.data.errors[0].msg) {
       messageError = error.response.data.errors[0].msg
     } else {
       messageError = 'Error al enviar los datos'
     }
-    console.log('error',messageError);
-    
+    console.log('error', messageError);
     notifyErrorRequest(messageError)
     return
+  }finally{
+    loadingSend.value = false
   }
 }
 
 
 function validationsForm() {
-  if (!modality.value ||  hourInstFollowup.value === '' || hourInstFollowup.value === null ||
+  if (!modality.value || hourInstFollowup.value === '' || hourInstFollowup.value === null ||
     hourInstTechnical.value === '' || hourInstTechnical.value === null ||
     hourInstProyect.value === '' || hourInstProyect.value === null) {
     notifyWarningRequest('Por favor, completa todos los campos para poder continuar.')
@@ -318,6 +319,7 @@ function filterFunctionSearch(val, update) {
 }
 
 async function searchModality() {
+  loadingSearch.value = true
   try {
     validationSearch()
     const response = await getData(`/modality/listmodalitybyid/${searchValue.value}`)
@@ -327,6 +329,8 @@ async function searchModality() {
     const message = error.response.data.errors[0].msg || error.response.data.message || 'Error al buscar la modalidad'
     notifyErrorRequest(message)
     await loadDataModality()
+  } finally {
+    loadingSearch.value = false
   }
 
 }

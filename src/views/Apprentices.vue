@@ -8,7 +8,7 @@
 
 
         <q-select v-model="fiche" :options="filterOptions" label="Ficha" emit-value map-options option-label="label"
-          option-value="_id" :use-input="!fiche" @filter="filterFunctionFiches" clearable class="custom-select" :rules="[
+          option-value="_id" :use-input="!fiche" @filter="filterFunctionFiches" clearable class="custom-select" :key="fiche" :rules="[
             (val) => !!val || 'La ficha es obligatoria'
           ]" filled>
           <template v-slot:prepend class="custom-select">
@@ -90,7 +90,7 @@
     <div class="InputButtonsSearch">
       <inputSelect v-model="searchValue" label="Buscar" :options="filterOptionsSearch" optionLabel="label"
         optionValue="_id" :useInput="!Search" :filter="filterFunctionSearch" class="custom-select" />
-      <buttonSearch :onclickButton="bucar" />
+      <buttonSearch :onclickButton="searchButton" :loading="loadingSearch"/>
     </div>
   </div>
   <CustomTable :rows="rows" :columns="columns" :onClickEdit="openDialogEdit" class="class"
@@ -117,7 +117,8 @@ import buttonSearch from "../components/buttons/buttonSearch.vue";
 
 const route = useRoute();
 
-let loading = ref(true)
+let loading = ref(false)
+let loadingSearch = ref(false)
 
 onBeforeMount(() => {
   loadData()
@@ -319,6 +320,7 @@ const originalValues = ref({
 });
 
 function openDialogEdit(row) {
+  const filteredFiche = filterOptions.value.find((opt) => opt._id === row.fiche.idFiche);
   isDialogVisibleModal.value = true;
   ismodalType.value = false;
   modality.value = false
@@ -330,9 +332,10 @@ function openDialogEdit(row) {
   emailIntitutional.value = row.institutionalEmail;
   phone.value = row.phone;
   tpDocument.value = row.tpDocument;
-  numDocument.value = row.numDocument;
   fiche.value = row.fiche.idFiche;
+  numDocument.value = row.numDocument;
   row_id.value = row._id;
+  
 
   // guarda valores originales
   originalValues.value = {
@@ -395,11 +398,11 @@ function validateAndTrim() {
 
 const handleSend = async () => {
   loading.value = true;
+  const selectedFiche = filterOptions.value.find((opt) => opt._id === fiche.value);
   try {
     if (!validateAndTrim()) {
       return;
     }
-    const selectedFiche = filterOptions.value.find((opt) => opt._id === fiche.value);
     let response;
     if (ismodalType.value) {
       response = await postData('/apprendice/addapprentice', {
@@ -428,6 +431,7 @@ const handleSend = async () => {
         tpDocument: tpDocument.value,
         numDocument: numDocument.value,
         fiche: {
+          idFiche: fiche.value,
           name: selectedFiche.name,
           number: selectedFiche.number,
         },
@@ -638,7 +642,8 @@ async function filterFunctionSearch(val, update) {
   });
 }
 
-async function bucar() {
+async function searchButton() {
+  loadingSearch.value = true
   validationSearch()
   if (radiobuttonlist.value === 'Fiche') {
     await listApprenticeForFiches();
@@ -648,6 +653,7 @@ async function bucar() {
     await listApprenticeForStatus();
   }
   clearSearch();
+  loadingSearch.value = false
 }
 
 

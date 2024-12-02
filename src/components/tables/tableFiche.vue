@@ -20,8 +20,8 @@
 
             <template v-slot:body-cell-seeApprentice="props">
                 <q-td :props="props" class="q-pa-xs text-center">
-                    <q-btn @click="toggleSeeApprentice(props.row)" icon="visibility" color="primary" round size="md"
-                        aria-label="Visibility">
+                    <q-btn @click="toggleSeeApprentice(props.row)" icon="visibility" color="primary" round size="md" 
+                        aria-label="Visibility" :loading="loadingButtonSee[props.row._id]" >
                     </q-btn>
                 </q-td>
             </template>
@@ -42,7 +42,7 @@
 
 <script setup>
 import { ref, watch } from "vue";
-
+let loadingButtonSee = ref({})
 const props = defineProps({
     rows: {
         type: Array,
@@ -63,8 +63,18 @@ const props = defineProps({
     loading: {
         type: Boolean,
         required: true,
-    }
+    },
+
 });
+
+const toggleSeeApprentice = async (row) =>{
+    loadingButtonSee.value[row._id] = true;
+    try {
+        await props.toggleSeeApprentice(row);       
+    } finally {
+        loadingButtonSee.value[row._id] = false;
+    }
+}
 
 
 </script>

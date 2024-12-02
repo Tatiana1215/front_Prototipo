@@ -31,7 +31,7 @@
                             icon="keyboard_arrow_left" direction="left">
                             <q-fab-action external-label label-position="top" color="primary"
                                 class="edit-btn btn-same-size" @click="onClickSearchFollow(props.row)" icon="search"
-                                round size="md" aria-label="Edit Square">
+                                round size="md" aria-label="Edit Square" :loading="loadingFollowup[props.row._id]" >
                                 <q-tooltip anchor="top middle" self="bottom middle" :offset="[10, 10]">
                                     <strong>Seguimiento</strong>
                                 </q-tooltip>
@@ -39,7 +39,7 @@
 
                             <q-fab-action external-label label-position="top" color="primary"
                                 class="edit-btn btn-same-size" @click="onClickSearchBinnacle(props.row)" icon="search"
-                                round size="md" aria-label="Edit Square">
+                                round size="md" aria-label="Edit Square" :loading="loadingBinnacles[props.row._id]" >
                                 <q-tooltip anchor="top middle" self="bottom middle" :offset="[10, 10]">
                                     <strong>Bitacora</strong>
                                 </q-tooltip>
@@ -60,7 +60,8 @@
 <script setup>
 import { ref } from "vue";
 let options = ref({});
-
+let loadingFollowup = ref({});
+let loadingBinnacles = ref({});
 const props = defineProps({
     rows: {
         type: Array,
@@ -92,6 +93,26 @@ const props = defineProps({
     },
 
 });
+
+const onClickSearchFollow = async (row) => {
+    loadingFollowup.value[row._id] = true
+    try {
+        await props.onClickSearchFollow(row)
+    } catch (error) {
+        
+    }finally{
+        loadingFollowup.value[row._id]= false
+    }
+}
+
+const onClickSearchBinnacle = async (row) => {
+    loadingBinnacles.value[row._id] = true
+    try {
+        await props.onClickSearchBinnacle(row)
+    }finally{
+        loadingBinnacles.value[row._id]= false
+    }
+}
 
 </script>
 

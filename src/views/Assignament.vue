@@ -19,7 +19,7 @@
       <div class="InputButtonsSearch">
         <inputSelect v-model="searchValue" label="Buscar" :options="filterOptionsSearch" optionLabel="label"
           optionValue="_id" :useInput="!Search" :filter="filterFunctionSearch" class="custom-select" />
-        <buttonSearch :onclickButton="searchDate" />
+        <buttonSearch :onclickButton="searchDate" :loading="loadingSearch"/>
       </div>
 
     </div>
@@ -32,7 +32,6 @@
 <script setup>
 import { ref, onBeforeMount } from 'vue';
 import Header from '../components/header/header.vue';
-import ButtonAgregate from '../components/modal/modal.vue';
 import TableOptions from "../components/tables/tableStatusSearchCreateEditAdd.vue";
 import radioButtonApprentice from "../components/radioButtons/radioButton.vue";
 import radioButtonInsFollow from "../components/radioButtons/radioButton.vue";
@@ -44,7 +43,6 @@ import { getData, putData, postData } from "../services/ApiClient.js";
 import { notifyErrorRequest, notifySuccessRequest, notifyWarningRequest } from '../composables/useNotify.js';
 import { router } from '../router/routers.js';
 
-
 onBeforeMount(async () => {
   await loadDataAssignament();
 })
@@ -55,13 +53,9 @@ let radioButtonList = ref('');
 let optionSearch = ref([]);
 let filterOptionsSearch = ref([]);
 
-// modals
-let isDialogVisibleModalAssignament = ref(false);
-let apprenticeName = ref(false)
-let labelTitle = ref('');
-
 // spiner
 let loading = ref(false);
+let loadingSearch = ref(false);
 
 const rows = ref([]);
 const columns = ref([
@@ -306,6 +300,7 @@ async function filterFunctionSearch(val, update) {
 }
 
 async function searchDate() {
+  loadingSearch.value = true
   validationSearch()
   if (radioButtonList.value === 'apprentice') {
     await searchApprentice()
@@ -317,6 +312,7 @@ async function searchDate() {
     await searchInstProject()
   }
   clearSearch();
+  loadingSearch.value = false
 }
 async function onclickSearchBinnacles(row) {
   try {

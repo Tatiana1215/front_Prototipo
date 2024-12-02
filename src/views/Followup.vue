@@ -12,7 +12,7 @@
       <div class="InputButtonsSearch">
         <inputSelect v-model="searchValue" label="Buscar" :options="filterOptionsSearch" optionLabel="label"
           optionValue="_id" :useInput="!Search" :filter="filterFunctionSearch" class="custom-select" />
-        <buttonSearch :onclickButton="searchButtons" />
+        <buttonSearch :onclickButton="searchButtons":loading=loadingSearch />
       </div>
     </div>
   </div>
@@ -46,6 +46,7 @@ import { notifyErrorRequest, notifySuccessRequest, notifyWarningRequest } from '
 import { useRoute } from 'vue-router';
 import radioButtonInstructor from '../components/radioButtons/radioButton.vue';
 import radioButtonApprentice from '../components/radioButtons/radioButton.vue';
+import { Loading } from 'quasar';
 
 
 let isDialogVisibleCreateObservation = ref(false)
@@ -59,6 +60,8 @@ let radioButtonList = ref('')
 
 // spiner
 let loading = ref(false);
+let loadingSearch = ref(false);
+
 
 // observación
 let observationFollowup = ref('');
@@ -83,8 +86,7 @@ const columns = ref([
     name: "name",
     label: "ETAPA PRODUCTIVA SEGUIMIENTO",
     align: "center",
-    field: row => row.register.idApprentice[0].firstName + ' ' + row.register.idApprentice[0].lastName ?
-      row.register.idApprentice[0].firstName + ' ' + row.register.idApprentice[0].lastName : 'No hay aprendiz',
+    field: row => row.register.idApprentice && row.register.idApprentice[0].firstName + ' ' + row.register.idApprentice[0].lastName ? row.register.idApprentice[0].firstName + ' ' + row.register.idApprentice[0].lastName : 'No hay aprendiz',
     sortable: true,
   },
   {
@@ -93,7 +95,15 @@ const columns = ref([
     align: "center",
     field: "number",
     sortable: true,
-  }, {
+  },
+  {
+    name: "nameInstructor",
+    label: "NOMBRE INSTRUCTOR",
+    align: "center",
+    field: row => row.instructor ? row.instructor.name : 'No asignado',
+    sortable: true,
+  },
+  {
     name: "status",
     label: "ESTADO",
     align: "center",
@@ -103,6 +113,12 @@ const columns = ref([
   {
     name: "observation",
     label: "OBSERVACINES",
+    align: "center",
+    field: "observation",
+    sortable: true,
+  },{
+    name: "detail",
+    label: "DETALLES",
     align: "center",
     field: "observation",
     sortable: true,
@@ -205,61 +221,6 @@ function closeDialog() {
   cleanObservaton();
 }
 
-
-// async function fetchDataApprentice() {
-//   const response = await getData('/followup/listallfollowup');
-//   optionsApprentice.value = response.map(option => ({
-//     _id: option._id,
-//     label: `${option.register.idApprentice[0].firstName} ${option.register.idApprentice[0].lastName} - ${option.register.idApprentice[0].numDocument}`,
-//   }));
-//   filterOptionsApprentice.value = optionsApprentice.value;
-
-// }
-// fetchDataApprentice();
-
-// async function filterFunctionsApprentice(val, update) {
-//   if (val === " ") {
-//     update(() => {
-//       filterOptionsApprentice.value = filterOptionsApprentice.value;
-//     });
-//     return;
-//   }
-
-//   update(() => {
-//     const needle = val.toLowerCase();
-//     filterOptionsApprentice.value = optionsApprentice.value.filter((option) =>
-//       option.label.toLowerCase().includes(needle) ||
-//       option.numDocument.toLowerCase().includes(needle)
-//     );
-//   });
-// }
-
-
-// async function searchApprentice() {
-//   try {
-//     const response = await getData(`/followup/listfollowupbyid/${searchValue.value}`);
-//     console.log(response);
-//     rows.value = [response];
-//   } catch (error) {
-//     if (searchValue.value === '') {
-//       validationSearch()
-//       await loadDataFollowup()
-//     } else {
-//       let messageError;
-//       if(error.response && error.response.data && error.response.data.message){
-//         messageError = error.response.data.message;
-//       }else if( error.response && error.response.data && error.response.data.errors && error.response.data.errors[0].msg){
-//         messageError = error.response.data.errors[0].msg;
-//       }else{
-//         messageError = 'Error al buscar aprendiz';
-//       }
-//       // const message = error.response.data.errors[0].msg || error.response.data.message || 'Error al buscar aprendiz';
-//       notifyErrorRequest(messageError);
-//     }
-//     await loadDataFollowup()
-//   }
-// }
-
 async function searchInstructor() {
   try {
     const response = await getData(`/followup/listfollowupbyinstructor/${searchValue.value}`)
@@ -275,7 +236,7 @@ async function searchInstructor() {
       }else if( error.response && error.response.data && error.response.data.errors && error.response.data.errors[0].msg){
         messageError = error.response.data.errors[0].msg;
       }else{
-        messageError = 'No se encontró ningún aprendiz con la información seleccionada.';
+        messageError = 'No se encontró ningún aprendiz por el instructor seleccionado.';
       }
       notifyErrorRequest(messageError);
     }
@@ -284,17 +245,18 @@ async function searchInstructor() {
 
 async function searchApprentice() {
   try {
-    const response = await getData(`/followup/listfollowupbyid/${searchValue.value}`)
-    console.log(response);
+    const response = await getData(`/followup/listFollowupByRegister/${searchValue.value}`)
+    console.log('aprendiz',response);
     rows.value = response.followup
+
   } catch (error) {
     if (searchValue.value === '') {
       validationSearch()
     } else {
       let messageError;
-      if(error.response && error.response.data && error.response.data.message){
+      if(error.response.data && error.response.data.message){
         messageError = error.response.data.message;
-      }else if( error.response && error.response.data && error.response.data.errors && error.response.data.errors[0].msg){
+      }else if( error.response && error.response.data.errors && error.response.data.errors[0].msg){
         messageError = error.response.data.errors[0].msg;
       }else{
         messageError = 'No se encontró ningún aprendiz con la información seleccionada.';
@@ -307,7 +269,7 @@ async function searchApprentice() {
 const handleRadioChange = async () => {
   if (radioButtonList.value === 'instructor') {
     const response = await getData('/Repfora/instructors');
-    console.log(response)
+    console.log('apprentice',response)
     optionSearch.value = response.map(option => ({
       _id: option._id,
       label: `${option.name} - ${option.numdocument}`,
@@ -321,7 +283,7 @@ const handleRadioChange = async () => {
       if (!uniqueApprentices.has(apprenticeId)) {
         uniqueApprentices.add(apprenticeId);
         return {
-          _id: apprenticeId,
+          _id: option.register._id,
           label: `${option.register.idApprentice[0].firstName} ${option.register.idApprentice[0].lastName} - ${option.register.idApprentice[0].numDocument}`,
           numDocument: option.numDocument
         };
@@ -359,17 +321,18 @@ async function filterFunctionSearch(val, update) {
 }
 
 async function searchButtons() {
+  loadingSearch.value = true; 
+  try{
   validationSearch()
-  if(searchValue.value === ''){
-    loadDataBinnacles()
-    await loadDataBinnacles()
-  }
   if (radioButtonList.value === 'instructor') {
     await searchInstructor()
   } else if (radioButtonList.value === 'apprentice') {
     await searchApprentice()
   }
   clearSearch();
+}finally{
+  loadingSearch.value = false
+}
 }
 
 </script>
