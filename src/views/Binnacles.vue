@@ -168,7 +168,7 @@ async function handleSend() {
   try {
 
     const response = await putData(`/binnacles/addobservation/${id.value}`, { observation: newObservation.value });
-    notifySuccessRequest('Observación añadida correctamente');
+    notifySuccessRequest('La observación se ha añadido correctamente');
     isDialogVisibleCreateObservation.value = false;
     await loadDataBinnacles();
     cleanObservaton()
@@ -176,7 +176,7 @@ async function handleSend() {
     if (newObservation.value === '') {
       validationHandleSend()
     } else {
-      const messageError = error.response.data.errors[0].msg || error.response.data.message || 'Error al añadir la observación'
+      const messageError = error.response.data.errors[0].msg || error.response.data.message || 'Hubo un error al intentar añadir la asignación. Por favor, inténtalo nuevamente.'
       notifyErrorRequest(messageError);
       cleanObservaton()
     }
@@ -187,7 +187,7 @@ async function handleSend() {
 
 function validationHandleSend() {
   if (newObservation.value === '') {
-    notifyWarningRequest('El campo de observación no puede estar vacio')
+    notifyWarningRequest('El campo de observaciones no puede estar vacío. Por favor, ingresa una observación para continuar.');
     return;
   }
 }
@@ -258,7 +258,6 @@ async function searchApprentice() {
 }
 
 const handleRadioChange = async () => {
-  // validationSearch()
   if (radioButtonList.value === 'instructor') {
     const response = await getData('/Repfora/instructors');
     console.log(response)
@@ -293,7 +292,7 @@ function clearSearch() {
 
 function validationSearch() {
   if (searchValue.value === '') {
-    notifyWarningRequest('El campo de busqueda no puede estar vacio');
+    notifyWarningRequest('El campo de búsqueda no puede estar vacío. Por favor, ingrese un dato para continuar.');
     return;
   }
 }

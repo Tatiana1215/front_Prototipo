@@ -93,7 +93,7 @@ async function seeApprentices(row) {
         }
 
     } catch (error) {
-        notifyErrorRequest('No hay aprendices en esa ficha')
+        notifyErrorRequest('No hay aprendices registrados en esta ficha.')
     }
 
 }

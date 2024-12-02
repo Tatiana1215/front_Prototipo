@@ -6,8 +6,8 @@
       :openModalButton="openButtonCreate">
 
       <q-select v-model="modality" :options="filterOptionsModality" label="Nombre de la modalidad" emit-value
-        map-options option-label="label" option-value="_id" :use-input="!modalitytp" @filter="filterFunctionModality"
-        class="custom-select" use-chips :rules="[
+        map-options option-label="label" option-value="_id" :use-input="!modalitytp" @filter="filterFunctionModality" clearable
+        class="custom-select"  :rules="[
           (val) => !!val || 'La ficha Modalidad es obligatoria'
         ]" filled>
         <template v-slot:prepend class="custom-select">
@@ -46,7 +46,7 @@
 </template>
 
 <script setup>
-import { ref, onBeforeMount } from 'vue';
+import { ref, onBeforeMount, TransitionGroup } from 'vue';
 import Header from '../components/header/header.vue';
 import tableModalityEp from '../components/tables/tableModalityEp.vue';
 import modalDialog from '../components/modal/modal.vue';
@@ -183,15 +183,18 @@ function handleClose() {
   cleanForm()
 }
 
-async function handleSend(row) {
-  // validationsForm()
-  const data = {
+async function handleSend() {
+
+  try {
+    if(!validationsForm()){
+    return 
+  }
+    const data = {
     name: modality.value,
     hourInstructorFollow: hourInstFollowup.value,
     hourInstructorTechnical: hourInstTechnical.value,
     hourInstructorProject: hourInstProyect.value
   }
-  try {
     let response;
     if (ismodalType.value) {
       response = await postData('/modality/addModality', data)
@@ -207,36 +210,45 @@ async function handleSend(row) {
 
       if (!hasChanges) {
         notifyWarningRequest('No se han realizado cambios')
+        isDialogVisibleModal.value = false;
+        cleanForm()
         return
       }
-
     }
-
+    
     isDialogVisibleModal.value = false;
+    notifySuccessRequest('Datos enviados correctamente')    
     cleanForm()
-    notifySuccessRequest('Datos enviados correctamente')
     await loadDataModality()
   } catch (error) {
     let messageError;
     if (error.response && error.response.data && error.response.data.message) {
       messageError = error.response.data.message
+    }else if(error.response && error.response.data && error.response.data.error){
+      messageError = error.response.data.error
+
     } else if (error.response && error.response.data && error.response.data.errors &&
       error.response.data.errors[0].msg) {
       messageError = error.response.data.errors[0].msg
     } else {
       messageError = 'Error al enviar los datos'
     }
-    // const message = error.response.data.errors[0].msg || error.response.data.message || 'Error al enviar los datos'
+    console.log('error',messageError);
+    
     notifyErrorRequest(messageError)
+    return
   }
 }
 
 
 function validationsForm() {
-  if (!modality.value || !hourInstFollowup.value || !hourInstTechnical.value || !hourInstProyect.value) {
-    notifyWarningRequest('Todos los campos son obligatorios')
-    return
+  if (!modality.value ||  hourInstFollowup.value === '' || hourInstFollowup.value === null ||
+    hourInstTechnical.value === '' || hourInstTechnical.value === null ||
+    hourInstProyect.value === '' || hourInstProyect.value === null) {
+    notifyWarningRequest('Por favor, completa todos los campos para poder continuar.')
+    return false
   }
+  return true
 }
 
 function cleanForm() {
@@ -245,8 +257,6 @@ function cleanForm() {
   hourInstTechnical.value = ''
   hourInstProyect.value = ''
 }
-
-
 
 async function fetchDataModality() {
   const response = await getData('/modality/listallmodality')
@@ -326,6 +336,10 @@ function validationSearch() {
     notifyWarningRequest('El campo de busqueda no puede estar vacio')
   }
 }
+
+
+
+
 </script>
 
 
